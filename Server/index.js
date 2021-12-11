@@ -1,7 +1,6 @@
 const http = require('http');
 const net = require('net');
 
-
 const httpServerPort = 8080;
 const tcpServerPort = 8090;
 
@@ -20,12 +19,44 @@ httpServer.listen(httpServerPort);
 
 // Create tcp server object that handles all the client registration and connections
 var tcpServer = net.createServer(function(socket) {
-	socket.write("Hello\r\n");
 	socket.on("data", function(data) {
-		console.log(data.toString("utf-8"));
-		if(data.toString().trim() == "exit"){
-			socket.end();
+		data = data.toString("utf-8").trim();
+
+		if(data.startsWith("REGISTER")){
+			// REGISTER,srcPubKey,ip
+			let client = data.split(",");
+
+			console.log("Client registered from %s", client[2]);
+			connectedClients[client[1]] = [client[2], socket];
+
+			socket.write("OK\n");
+		}else if(data.startsWith("CONNECT")){
+			// CONNECT,srcIP,srcPubKey,receiverPubKey
+			let parsedData = data.split(",");
+
+			var srcPort = generatePort()
+			var dstPort = generatePort()
+
+			if(!connectedClients[parsedData[3]]){
+				socket.write("NO\n")
+			}else{
+				receiver = connectedClients[parsedData[3]];
+
+				srcSocket = socket;
+				receiverSocket = receiver[1];
+
+				srcIP = parsedData[1];
+				receiverIP = receiver[0];
+
+				console.log("Connection between: %s:%s -> %s:%s", srcIP, srcPort, receiverIP, dstPort)
+				srcSocket.write("OK," + receiverIP + "," + dstPort + "," + srcPort);
+
+				receiverSocket.write("OK," + srcIP + "," + srcPort + "," + dstPort);
+
+			}
+			
 		}
+		
 	});
 });
 
@@ -34,3 +65,6 @@ console.log("Starting tcp server on port %d", tcpServerPort);
 tcpServer.listen(tcpServerPort);
 
 
+var generatePort = function(){
+	return Math.floor(Math.random() * 10000) + 15000;
+}

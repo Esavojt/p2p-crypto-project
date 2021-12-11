@@ -44,15 +44,7 @@ public_key_string = re.sub("-+[A-Z ]+-+", "", public_key_string)
 private_key_string = private_key.export_key().decode("utf-8").replace("\n", "")
 private_key_string = re.sub("-+[A-Z ]+-+", "", private_key_string)
 
-port = 25343
-
-
-
-p2p_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-p2p_socket.bind(("", port))
 
 test = "Hello world"
 
@@ -73,15 +65,34 @@ else:
 
 print(f"Klíč klienta \n{public_key_string}")
 
-while True:
-    pass
+print("")
+print("Napiš 'r' pro příjem, napiš 's' pro připojení")
+if input() == "s":
+    print("Vlož klíč od příjemce")
+    receiverKey = input()
+    server_socket.send(bytes(f"CONNECT,{ip},{public_key_string},{receiverKey}", encoding="UTF-8"))
+else:
+    print("Čekáme na příjem")
 
-while True:
-    p2p_socket.sendto(bytes(test, encoding="UTF-8"), ("31.222.4.120", 21600))
-    print("Sending")
-    r, w, e = select.select([p2p_socket], [], [], 1)
-    for s in r:
-        if s == p2p_socket:
-            data = p2p_socket.recv(4096)
-            print(data)
-    time.sleep(1)
+response = server_socket.recv(4096)
+response = response.decode("UTF-8")
+if response.startswith("NO"):
+    print("Nebylo možné se připojit")
+    exit(1)
+else:
+    data = response.split(",")
+    print(f"{data} - Lokální port: {int(data[3])}, Vzdálená ip/port: {(str(data[1]), int(data[2]))}")
+    p2p_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+    p2p_socket.bind(("", int(data[3])))
+
+    dstIP = (str(data[1]), int(data[2]))
+
+    while True:
+        p2p_socket.sendto(bytes(test, encoding="UTF-8"), dstIP)
+        print("Sending")
+        r, w, e = select.select([p2p_socket], [], [], 1)
+        for s in r:
+            if s == p2p_socket:
+                data = p2p_socket.recv(4096)
+                print(data)
+        time.sleep(1)
