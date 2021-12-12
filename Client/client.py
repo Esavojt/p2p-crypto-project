@@ -11,7 +11,7 @@ import threading
 import string
 import random
 
-server_address = ('172.25.52.202', 8090)
+server_address = ('6.tcp.ngrok.io', 16488)
 
 # Cryptography
 from Crypto.PublicKey import RSA
@@ -98,21 +98,36 @@ else:
 
     dstIP = (str(data[1]), int(data[2]))
 
+    def generate_random_string(length):
+        return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(length))
+
+
     print("Připojování")
-    while True:
-        p2p_socket.sendto(bytes("Hello", encoding="UTF-8"), dstIP)
-        r, w, e = select.select([p2p_socket], [], [], 1)
+    got_responded = False
+    responded = False
+    for _ in range(5):
+        hello_msg = "Hello " + generate_random_string(4) + "\n"
+        p2p_socket.sendto(bytes(hello_msg, encoding="UTF-8"), dstIP)
+        r, w, e = select.select([p2p_socket], [], [], 0.2)
         if len(r) != 0:
-            data = p2p_socket.recv(4096)
-            if data == b"Hello":
-                break
+            responses = p2p_socket.recv(4096).decode("utf-8").splitlines()
+            for response in responses:
+                if not response.startswith("Hello"):
+                    continue
+
+                if response == hello_msg[:-1]:
+                    got_responded = True
+                else:
+                    p2p_socket.sendto(bytes(response + "\n", encoding="UTF-8"), dstIP)
+                    responded = True
+
+    time.sleep(0.2)
+    if not responded and not got_responded:
+        print("Nebylo možné navázat spojení")
     
 
     if role == "sender":
         remote_key = RSA.import_key("-----BEGIN PUBLIC KEY-----\n"+receiverKey+"\n-----END PUBLIC KEY-----")
-
-        def generate_random_string(length):
-            return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(length))
 
         encryptor = PKCS1_OAEP.new(remote_key)
         encryption_key = generate_random_string(32)
