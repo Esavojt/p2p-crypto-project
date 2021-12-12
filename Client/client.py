@@ -181,7 +181,7 @@ else:
             cipher = AES.new(encryption_key.encode("utf-8"), AES.MODE_EAX, nonce=nonce)
             msg = cipher.decrypt(ciphertext)
 
-            stdscr.addstr(lastMessageLine, 2, f"##: {msg.decode('utf-8')}")
+            stdscr.addstr(lastMessageLine, 2, f"{dstIP}: {msg.decode('utf-8')}")
             stdscr.move(maxY-2, 10 + messageCharIndex)
             stdscr.refresh()
             lastMessageLine += 1
@@ -199,7 +199,7 @@ else:
             stdscr.move(maxY-2, 10)
             stdscr.addstr(maxY-2, 10 , " "*(maxX - 11))
 
-            stdscr.addstr(lastMessageLine, 2, f"Já: {message}")
+            stdscr.addstr(lastMessageLine, 2, f"{ip}: {message}")
 
             # Send message
             cipher = AES.new(encryption_key.encode("utf-8"), AES.MODE_EAX)
