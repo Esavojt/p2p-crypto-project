@@ -74,6 +74,7 @@ if input() == "s":
 else:
     print("Čekáme na příjem")
 
+
 response = server_socket.recv(4096)
 response = response.decode("UTF-8")
 if response.startswith("NO"):
@@ -87,9 +88,20 @@ else:
 
     dstIP = (str(data[1]), int(data[2]))
 
+    print("Připojování")
+    while True:
+        p2p_socket.sendto(bytes("Hello", encoding="UTF-8"), dstIP)
+        r, w, e = select.select([p2p_socket], [], [], 1)
+        if len(r) != 0:
+            data = p2p_socket.recv(4096)
+            if data == b"Hello":
+                break
+    
+    print("Připojeno!")
+        
+
     while True:
         p2p_socket.sendto(bytes(test, encoding="UTF-8"), dstIP)
-        print("Sending")
         r, w, e = select.select([p2p_socket], [], [], 1)
         for s in r:
             if s == p2p_socket:
