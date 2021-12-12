@@ -1,56 +1,25 @@
 import socket
 import time
 import select
-import json
-import Crypto
 import requests
 import os
-import sys
 import re
 import threading
 import string
 import random
 
-server_address = ('6.tcp.ngrok.io', 16488)
+server_address = ('localhost', 8090)
 
 # Cryptography
-from Crypto.PublicKey import RSA
-from Crypto import Random
 
-from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Cipher import AES
 
+# Custom modules
+from keypair import KeyPair
 
-if not os.path.isdir("keys"):
-    os.mkdir("keys")
+local_key_pair = KeyPair()
+local_key_pair.add_keypair_from_files()
 
-if not os.path.isfile(os.path.join("keys","private_key")):
-    print("Klíčový pár neexistuje, regenerujeme!")
-    key = RSA.generate(2048)
-    private_key = key
-    public_key = key.publickey()
-    
-    file_out = open(os.path.join("keys","private_key"), "wb")
-    file_out.write(private_key.exportKey())
-    file_out.close()
-
-    file_out = open(os.path.join("keys","public_key"), "wb")
-    file_out.write(public_key.export_key())
-    file_out.close()
-else:
-    public_key_file = open(os.path.join("keys","public_key"), "r")
-    public_key = RSA.import_key(public_key_file.read())
-    public_key_file.close()
-
-    private_key_file = open(os.path.join("keys","private_key"), "r")
-    private_key = RSA.import_key(private_key_file.read())
-    private_key_file.close()
-
-public_key_string = public_key.export_key().decode("utf-8").replace("\n", "")
-public_key_string = re.sub("-+[A-Z ]+-+", "", public_key_string)
-
-private_key_string = private_key.export_key().decode("utf-8").replace("\n", "")
-private_key_string = re.sub("-+[A-Z ]+-+", "", private_key_string)
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -62,7 +31,7 @@ ip = request.json()["ip"]
 
 server_socket.connect(server_address)
 
-server_socket.send(bytes(f"REGISTER,{public_key_string},{ip}", encoding="UTF-8"))
+server_socket.send(bytes(f"REGISTER,{local_key_pair.public_key_string},{ip}", encoding="UTF-8"))
 
 response = server_socket.recv(4096)
 if response == b"OK\n":
@@ -71,7 +40,7 @@ else:
     print("Klienta nebylo možné zaregistrovat")
     exit(1)
 
-print(f"Klíč klienta \n{public_key_string}")
+print(f"Klíč klienta \n{local_key_pair.public_key_string}")
 
 print("")
 print("Napiš 'r' pro příjem, napiš 's' pro připojení")
@@ -80,7 +49,7 @@ if input() == "s":
     print("Vlož klíč od příjemce")
     receiverKey = input()
     role = "sender"
-    server_socket.send(bytes(f"CONNECT,{ip},{public_key_string},{receiverKey}", encoding="UTF-8"))
+    server_socket.send(bytes(f"CONNECT,{ip},{local_key_pair.public_key_string},{receiverKey}", encoding="UTF-8"))
 else:
     print("Čekáme na příjem")
 
@@ -128,14 +97,14 @@ else:
     
 
     if role == "sender":
-        remote_key = RSA.import_key("-----BEGIN PUBLIC KEY-----\n"+receiverKey+"\n-----END PUBLIC KEY-----")
+        remote_keypair = KeyPair()
+        remote_keypair.add_keypair_custom(receiverKey, None)
+        
 
-        encryptor = PKCS1_OAEP.new(remote_key)
         encryption_key = generate_random_string(32)
-        p2p_socket.sendto(encryptor.encrypt(encryption_key.encode("utf-8")), dstIP)
+        p2p_socket.sendto(remote_keypair.encrypt(encryption_key.encode("utf-8")), dstIP)
     else:
-        decryptor = PKCS1_OAEP.new(private_key)
-        encryption_key = decryptor.decrypt(p2p_socket.recv(4096)).decode("UTF-8")
+        encryption_key = local_key_pair.decrypt(p2p_socket.recv(4096)).decode("UTF-8")
 
     print(encryption_key)
     time.sleep(2)
@@ -161,7 +130,7 @@ else:
     curses.noecho() # disable the keypress echo to prevent double input
     curses.cbreak() # disable line buffers to run the keypress immediately
     curses.curs_set(1)
-    stdscr.keypad(1) # enable keyboard use
+    stdscr.keypad(True) # enable keyboard use
 
     lastMessageLine = 1
 
