@@ -2,15 +2,23 @@ import socket
 import time
 import select
 import json
+import Crypto
 import requests
 import os
+import sys
 import re
+import threading
+import string
+import random
 
-server_address = ("172.20.201.136", 8090)
+server_address = ('172.25.52.202', 8090)
 
 # Cryptography
 from Crypto.PublicKey import RSA
 from Crypto import Random
+
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Cipher import AES
 
 
 if not os.path.isdir("keys"):
@@ -67,9 +75,11 @@ print(f"Klíč klienta \n{public_key_string}")
 
 print("")
 print("Napiš 'r' pro příjem, napiš 's' pro připojení")
+role = "receiver"
 if input() == "s":
     print("Vlož klíč od příjemce")
     receiverKey = input()
+    role = "sender"
     server_socket.send(bytes(f"CONNECT,{ip},{public_key_string},{receiverKey}", encoding="UTF-8"))
 else:
     print("Čekáme na příjem")
@@ -97,14 +107,109 @@ else:
             if data == b"Hello":
                 break
     
+
+    if role == "sender":
+        remote_key = RSA.import_key("-----BEGIN PUBLIC KEY-----\n"+receiverKey+"\n-----END PUBLIC KEY-----")
+
+        def generate_random_string(length):
+            return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(length))
+
+        encryptor = PKCS1_OAEP.new(remote_key)
+        encryption_key = generate_random_string(32)
+        p2p_socket.sendto(encryptor.encrypt(encryption_key.encode("utf-8")), dstIP)
+    else:
+        decryptor = PKCS1_OAEP.new(private_key)
+        encryption_key = decryptor.decrypt(p2p_socket.recv(4096)).decode("UTF-8")
+
+    print(encryption_key)
+    time.sleep(2)
+    
     print("Připojeno!")
-        
+
+    import curses
+
+    stdscr = curses.initscr()
+
+    maxY, maxX = stdscr.getmaxyx()
+
+    # Draw border
+    stdscr.border('|', '|', '-', '-', '+', '+', '+', '+')
+
+    # Draw message field
+    stdscr.addstr(maxY-3, 0, f"+{'-'*(maxX-2)}+")
+    stdscr.addstr(maxY-2, 2, "Zpráva:")
+
+    # Set cursor to the message field
+    stdscr.move(maxY-2, 10)
+
+    curses.noecho() # disable the keypress echo to prevent double input
+    curses.cbreak() # disable line buffers to run the keypress immediately
+    curses.curs_set(1)
+    stdscr.keypad(1) # enable keyboard use
+
+    lastMessageLine = 1
+
+    messageCharIndex = 0
+    message = ""
+    
+    def message_handle_thread():
+        while True:
+            r, w, e = select.select([p2p_socket], [], [])
+            global stdscr
+            global lastMessageLine
+            global messageCharIndex
+
+            bytemsg = p2p_socket.recv(4096)
+            ciphertext = bytemsg[:-16]
+            nonce = bytemsg[len(bytemsg)-16:]
+            cipher = AES.new(encryption_key.encode("utf-8"), AES.MODE_EAX, nonce=nonce)
+            msg = cipher.decrypt(ciphertext)
+
+            stdscr.addstr(lastMessageLine, 2, f"##: {msg.decode('utf-8')}")
+            stdscr.move(maxY-2, 10 + messageCharIndex)
+            stdscr.refresh()
+            lastMessageLine += 1
+
+    threading.Thread(target=message_handle_thread).start()
 
     while True:
-        p2p_socket.sendto(bytes(test, encoding="UTF-8"), dstIP)
-        r, w, e = select.select([p2p_socket], [], [], 1)
-        for s in r:
-            if s == p2p_socket:
-                data = p2p_socket.recv(4096)
-                print(data)
-        time.sleep(1)
+        char = stdscr.get_wch()
+        curses.flushinp()
+
+        if char == '\x03':
+            # Exit on CTRL + C
+            exit()
+        elif char == '\n':
+            stdscr.move(maxY-2, 10)
+            stdscr.addstr(maxY-2, 10 , " "*(maxX - 11))
+
+            stdscr.addstr(lastMessageLine, 2, f"Já: {message}")
+
+            # Send message
+            cipher = AES.new(encryption_key.encode("utf-8"), AES.MODE_EAX)
+            nonce = cipher.nonce
+
+            ciphertext, tag = cipher.encrypt_and_digest(message.encode("utf-8"))
+
+            p2p_socket.sendto(ciphertext+nonce, dstIP)
+
+            lastMessageLine += 1
+            messageCharIndex = 0
+            message = ""
+
+            stdscr.move(maxY-2, 10)
+
+        elif char == '\x08': # Backspace
+            message = message[:-1]
+            messageCharIndex -= 1
+            if messageCharIndex < 0:
+                messageCharIndex = 0
+
+            stdscr.addstr(maxY-2, 10 + messageCharIndex, " ")
+            stdscr.move(maxY - 2, 10 + messageCharIndex)
+
+        else:
+            message += char
+            stdscr.addstr(maxY-2, 10 + messageCharIndex, char)
+            messageCharIndex += 1
+            stdscr.refresh()
