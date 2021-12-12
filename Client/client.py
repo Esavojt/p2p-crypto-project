@@ -181,7 +181,7 @@ else:
             cipher = AES.new(encryption_key.encode("utf-8"), AES.MODE_EAX, nonce=nonce)
             msg = cipher.decrypt(ciphertext)
 
-            stdscr.addstr(lastMessageLine, 2, f"{dstIP}: {msg.decode('utf-8')}")
+            stdscr.addstr(lastMessageLine, 2, f"{dstIP[0]}: {msg.decode('utf-8')}")
             stdscr.move(maxY-2, 10 + messageCharIndex)
             stdscr.refresh()
             lastMessageLine += 1
