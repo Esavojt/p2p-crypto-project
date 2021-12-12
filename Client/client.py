@@ -167,10 +167,19 @@ else:
 
     messageCharIndex = 0
     message = ""
+
+    stop_threads = False
     
     def message_handle_thread():
         while True:
-            r, w, e = select.select([p2p_socket], [], [])
+            r, w, e = select.select([p2p_socket], [], [], 2)
+
+            global stop_threads
+            if stop_threads:
+                return
+
+            if len(r) == 0: continue
+
             global stdscr
             global lastMessageLine
             global messageCharIndex
@@ -189,11 +198,15 @@ else:
     threading.Thread(target=message_handle_thread).start()
 
     while True:
-        char = stdscr.get_wch()
+        char = stdscr.getkey()
         curses.flushinp()
 
-        if char == '\x03':
+        if char in ['\x03']:
             # Exit on CTRL + C
+            curses.echo()
+            curses.nocbreak()
+            stdscr.keypad(False)
+
             exit()
         elif char == '\n':
             stdscr.move(maxY-2, 10)
@@ -215,7 +228,7 @@ else:
 
             stdscr.move(maxY-2, 10)
 
-        elif char == '\x08': # Backspace
+        elif char in ['\x08', "KEY_BACKSPACE", "\b"]: # Backspace
             message = message[:-1]
             messageCharIndex -= 1
             if messageCharIndex < 0:
