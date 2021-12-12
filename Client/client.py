@@ -108,18 +108,19 @@ else:
     for _ in range(5):
         hello_msg = "Hello " + generate_random_string(4) + "\n"
         p2p_socket.sendto(bytes(hello_msg, encoding="UTF-8"), dstIP)
-        r, w, e = select.select([p2p_socket], [], [], 0.2)
-        if len(r) != 0:
-            responses = p2p_socket.recv(4096).decode("utf-8").splitlines()
-            for response in responses:
-                if not response.startswith("Hello"):
-                    continue
+        for _ in range(2):
+            r, w, e = select.select([p2p_socket], [], [], 1)
+            if len(r) != 0:
+                responses = p2p_socket.recv(4096).decode("utf-8").splitlines()
+                for response in responses:
+                    if not response.startswith("Hello"):
+                        continue
 
-                if response == hello_msg[:-1]:
-                    got_responded = True
-                else:
-                    p2p_socket.sendto(bytes(response + "\n", encoding="UTF-8"), dstIP)
-                    responded = True
+                    if response == hello_msg[:-1]:
+                        got_responded = True
+                    else:
+                        p2p_socket.sendto(bytes(response + "\n", encoding="UTF-8"), dstIP)
+                        responded = True
 
     time.sleep(0.2)
     if not responded and not got_responded:
