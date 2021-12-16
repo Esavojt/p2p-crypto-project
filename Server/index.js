@@ -67,10 +67,11 @@ var tcpServer = net.createServer(function(socket) {
 
 	socket.on("error", function(err) {
 		console.log("An error has occured", err.name);
-		connectedClients.forEach(element => {
-			if(element.socket == socket){
-				console.log(element.address, "disconnected, removing from db")
-				delete connectedClients[element.publicKey]
+		var keys = Object.keys(connectedClients)
+		keys.forEach(key => {
+			if(connectedClients[key].socket == socket){
+				console.log(connectedClients[key].address, "disconnected, removing from db")
+				delete connectedClients[key]
 			}
 		});
 	});
