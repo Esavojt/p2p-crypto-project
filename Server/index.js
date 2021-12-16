@@ -48,11 +48,11 @@ var tcpServer = net.createServer(function(socket) {
 			}else{
 				var receiver = connectedClients[parsedData[2]];
 
-				srcSocket = socket;
-				receiverSocket = receiver[1];
+				var srcSocket = socket;
+				var receiverSocket = receiver[1];
 
-				srcIP = ipAddress;
-				receiverIP = receiver[0];
+				var srcIP = ipAddress;
+				var receiverIP = receiver[0];
 
 				console.log("Connection between: %s:%s -> %s:%s", srcIP, srcPort, receiverIP, dstPort)
 				srcSocket.write("OK," + receiverIP + "," + dstPort + "," + srcPort);
