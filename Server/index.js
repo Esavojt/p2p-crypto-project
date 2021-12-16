@@ -62,6 +62,8 @@ var tcpServer = net.createServer(function(socket) {
 
 			}
 			
+		}else{
+			console.log("Someone sent wrong data! %s: %s", socket.remoteAddress, data);
 		}
 	});
 
