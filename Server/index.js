@@ -20,32 +20,33 @@ httpServer.listen(httpServerPort);
 // Create tcp server object that handles all the client registration and connections
 var tcpServer = net.createServer(function(socket) {
 	socket.on("data", function(data) {
+		var ipAddress = socket.remoteAddress
 		data = data.toString("utf-8").trim();
 
 		if(data.startsWith("REGISTER")){
 			// REGISTER,srcPubKey
 			let client = data.split(",");
 
-			console.log("Client registered from %s", socket.remoteAddress);
-			connectedClients[client[1]] = [socket.remoteAddress, socket];
+			console.log("Client registered from %s", ipAddress);
+			connectedClients[client[1]] = [ipAddress, socket];
 
 			socket.write("OK\n");
 		}else if(data.startsWith("CONNECT")){
-			// CONNECT,srcIP,srcPubKey,receiverPubKey
+			// CONNECT,srcPubKey,receiverPubKey
 			let parsedData = data.split(",");
 
 			var srcPort = generatePort()
 			var dstPort = generatePort()
 
-			if(!connectedClients[parsedData[3]]){
+			if(!connectedClients[parsedData[2]]){
 				socket.write("NO\n")
 			}else{
-				receiver = connectedClients[parsedData[3]];
+				receiver = connectedClients[parsedData[2]];
 
 				srcSocket = socket;
 				receiverSocket = receiver[1];
 
-				srcIP = parsedData[1];
+				srcIP = ipAddress;
 				receiverIP = receiver[0];
 
 				console.log("Connection between: %s:%s -> %s:%s", srcIP, srcPort, receiverIP, dstPort)

@@ -45,7 +45,7 @@ if input() == "s":
     print("Vlož klíč od příjemce")
     receiverKey = input()
     role = "sender"
-    server_socket.send(bytes(f"CONNECT,{ip},{local_key_pair.public_key_string},{receiverKey}", encoding="UTF-8"))
+    server_socket.send(bytes(f"CONNECT,{local_key_pair.public_key_string},{receiverKey}", encoding="UTF-8"))
 else:
     print("Čekáme na příjem")
 
