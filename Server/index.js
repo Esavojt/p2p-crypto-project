@@ -46,7 +46,7 @@ var tcpServer = net.createServer(function(socket) {
 			if(!connectedClients[parsedData[2]]){
 				socket.write("NO\n")
 			}else{
-				receiver = connectedClients[parsedData[2]];
+				var receiver = connectedClients[parsedData[2]];
 
 				srcSocket = socket;
 				receiverSocket = receiver[1];
