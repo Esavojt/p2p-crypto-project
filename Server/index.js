@@ -19,8 +19,9 @@ httpServer.listen(httpServerPort);
 
 // Create tcp server object that handles all the client registration and connections
 var tcpServer = net.createServer(function(socket) {
+	var ipAddress = socket.remoteAddress
+	
 	socket.on("data", function(data) {
-		var ipAddress = socket.remoteAddress
 		data = data.toString("utf-8").trim();
 
 		if(data.startsWith("REGISTER")){
