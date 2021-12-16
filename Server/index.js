@@ -66,10 +66,16 @@ var tcpServer = net.createServer(function(socket) {
 	});
 
 	socket.on("error", function(err) {
-		console.log("An error has occured", err.name);
-		var keys = Object.keys(connectedClients)
+		console.log("An error has occured", err.message);
+		var keys = Object.keys(connectedClients);
+		var ipAddress = socket.remoteAddress;
+
+		if (ipAddress.startsWith("::ffff:")) {
+			ipAddress = ipAddress.substring(7)
+		}
+
 		keys.forEach(key => {
-			if(connectedClients[key].socket == socket){
+			if(connectedClients[key].address == ipAddress){
 				console.log(connectedClients[key].address, "disconnected, removing from db")
 				delete connectedClients[key]
 			}
@@ -77,13 +83,21 @@ var tcpServer = net.createServer(function(socket) {
 	});
 
 	socket.on("end", function(){
-		connectedClients.forEach(element => {
-			if(element.socket == socket){
-				console.log(element.address, "disconnected, removing from db")
-				delete connectedClients[element.publicKey]
+		var keys = Object.keys(connectedClients);
+		var ipAddress = socket.remoteAddress;
+
+		if (ipAddress.startsWith("::ffff:")) {
+			ipAddress = ipAddress.substring(7)
+		}
+
+		keys.forEach(key => {
+			if(connectedClients[key].address == ipAddress){
+				console.log(connectedClients[key].address, "disconnected, removing from db")
+				delete connectedClients[key]
 			}
 		});
-	})
+
+	});
 });
 
 // Create TCP server that listens on tcpServerPort
