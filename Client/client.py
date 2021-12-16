@@ -177,7 +177,7 @@ else:
             stdscr.move(maxY-2, 10)
             stdscr.addstr(maxY-2, 10 , " "*(maxX - 11))
 
-            stdscr.addstr(lastMessageLine, 2, f"{ip}: {message}")
+            stdscr.addstr(lastMessageLine, 2, f"ME: {message}")
 
             # Send message
             cipher = AES.new(encryption_key.encode("utf-8"), AES.MODE_EAX)
