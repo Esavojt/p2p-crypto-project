@@ -22,6 +22,7 @@ httpServer.listen(httpServerPort);
 var tcpServer = net.createServer(function(socket) {
 	socket.on("data", function(data) {
 		var ipAddress = socket.remoteAddress;
+
 		if (ipAddress.startsWith("::ffff:")) {
 			ipAddress = ipAddress.substring(7)
 		}
@@ -33,7 +34,7 @@ var tcpServer = net.createServer(function(socket) {
 			let client = data.split(",");
 
 			console.log("Client registered from %s", ipAddress);
-			connectedClients[client[1]] = [ipAddress, socket];
+			connectedClients[client[1]] = {address: ipAddress, socketObject: socket, publicKey: client[1]};
 
 			socket.write("OK\n");
 		}else if(data.startsWith("CONNECT")){
@@ -49,10 +50,10 @@ var tcpServer = net.createServer(function(socket) {
 				var receiver = connectedClients[parsedData[2]];
 
 				var srcSocket = socket;
-				var receiverSocket = receiver[1];
+				var receiverSocket = receiver.socketObject;
 
 				var srcIP = ipAddress;
-				var receiverIP = receiver[0];
+				var receiverIP = receiver.address;
 
 				console.log("Connection between: %s:%s -> %s:%s", srcIP, srcPort, receiverIP, dstPort)
 				srcSocket.write("OK," + receiverIP + "," + dstPort + "," + srcPort);
@@ -62,8 +63,26 @@ var tcpServer = net.createServer(function(socket) {
 			}
 			
 		}
-		
 	});
+
+	socket.on("error", function(err) {
+		console.log("An error has occured", err.name);
+		connectedClients.forEach(element => {
+			if(element.socket == socket){
+				console.log(element.address, "disconnected, removing from db")
+				delete connectedClients[element.publicKey]
+			}
+		});
+	});
+
+	socket.on("end", function(){
+		connectedClients.forEach(element => {
+			if(element.socket == socket){
+				console.log(element.address, "disconnected, removing from db")
+				delete connectedClients[element.publicKey]
+			}
+		});
+	})
 });
 
 // Create TCP server that listens on tcpServerPort
