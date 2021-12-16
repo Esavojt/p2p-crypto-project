@@ -66,7 +66,7 @@ var tcpServer = net.createServer(function(socket) {
 	});
 
 	socket.on("error", function(err) {
-		console.log("An error has occured", err.message);
+		console.log("An error has occured '%s'", err.message);
 		var keys = Object.keys(connectedClients);
 		var ipAddress = socket.remoteAddress;
 
