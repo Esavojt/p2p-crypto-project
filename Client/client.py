@@ -8,7 +8,7 @@ import threading
 import string
 import random
 
-server_address = ('localhost', 8090)
+server_address = ('141.144.235.239', 8090)
 
 # Cryptography
 
@@ -25,13 +25,9 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 test = "Hello world"
 
-# Get public IP
-request = requests.get('https://api.ipify.org?format=json')
-ip = request.json()["ip"]
-
 server_socket.connect(server_address)
 
-server_socket.send(bytes(f"REGISTER,{local_key_pair.public_key_string},{ip}", encoding="UTF-8"))
+server_socket.send(bytes(f"REGISTER,{local_key_pair.public_key_string}", encoding="UTF-8"))
 
 response = server_socket.recv(4096)
 if response == b"OK\n":

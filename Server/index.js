@@ -23,11 +23,11 @@ var tcpServer = net.createServer(function(socket) {
 		data = data.toString("utf-8").trim();
 
 		if(data.startsWith("REGISTER")){
-			// REGISTER,srcPubKey,ip
+			// REGISTER,srcPubKey
 			let client = data.split(",");
 
-			console.log("Client registered from %s", client[2]);
-			connectedClients[client[1]] = [client[2], socket];
+			console.log("Client registered from %s", socket.remoteAddress);
+			connectedClients[client[1]] = [socket.remoteAddress, socket];
 
 			socket.write("OK\n");
 		}else if(data.startsWith("CONNECT")){
