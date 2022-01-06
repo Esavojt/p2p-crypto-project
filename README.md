@@ -22,12 +22,17 @@ Registrace (c -> s) - 1B 392B 32B
 Acknowledged, Not acknowledged (% -> %) - 1B
 1. Typ packetu (hex 00 - ack, hex 01 - nack)
 
-Připojit se (c -> s) - 1B 392B
+Připojit se (c -> s) - 1B 392B 392B
 1. Typ packetu (hex 12)
-2. Veřejný klíč vzdálené strany (ascii)
+2. Veřejný klíč klienta
+3. Veřejný klíč vzdálené strany (ascii)
+
+Žádost o připojení (s -> c) - 1B 392B
+1. Typ packetu (hex 13)
+2. Veřejný klíč strany, která se chce připojit (ascii)
 
 Sestava připojení (s -> c) - 1B 4B 2B 2B
-1. Typ packetu (hex 13)
+1. Typ packetu (hex 14)
 2. Vzdálená IP adresa (ve formátu 1B.1B.1B.1B)
 3. Vzdálený port (16Bit číslo)
 4. Lokalní port (16Bit číslo)

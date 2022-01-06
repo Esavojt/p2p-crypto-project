@@ -27,9 +27,26 @@ var tcpServer = net.createServer(function(socket) {
 			ipAddress = ipAddress.substring(7)
 		}
 
-		data = data.toString("utf-8").trim();
+		switch (data[0]) {
+			case 0x11:
+				var publicKey = data.subarray(1, 393).toString("ascii");
+				var hostname = data.subarray(393).toString("ascii");
 
-		if(data.startsWith("REGISTER")){
+				console.log("Client registered from %s with hostname '%s'", ipAddress, hostname);
+				connectedClients[publicKey] = {address: ipAddress, publicKey: publicKey, hostname: hostname, socketObject: socket};
+
+				socket.write(Buffer.from([0x00]));
+				break;
+
+			case 0x12:
+				// TODO: Implement
+				var localPublicKey = data.subarray(1, 393).toString("ascii");
+				var remotePublicKey = data.subarray(1, 393).toString("ascii");
+				break;
+		}
+		return;
+
+		if(data[0] == 0x11){
 			// REGISTER,srcPubKey
 			let client = data.split(",");
 
