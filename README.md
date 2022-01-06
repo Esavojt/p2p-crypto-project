@@ -1,11 +1,12 @@
 ## Struktura packetu
 ---
 1024B - Délka max
+518B - Aktuální předpoklad
 
-Struktura - 1B 1B xB
-1. Pořad. číslo
-2. Typ packetu (control, data)
-3. Data
+Struktura - pořadové číslo (2 byte max), typ dat (*4* byte), packet (512 byte max) 
+1. Pořadové číslo: číslovat od 1 do *64*, u příchozí strany řadit od 1 do *64* a opakovat (*64 asi? určit podle odezvy*)
+2. Typ dat: označení (*pro 3 písmena rezervovat 4B*) ODT- data osobní, CDT- řídící info, RDT- handshake/responde
+3. Packet: samotné data pro přenos mezi klienty
 
 
 ---
