@@ -1,8 +1,6 @@
 ## Struktura packetu
 ---
 1024B - Délka max
----
-518B - Aktuální předpoklad
 
 Struktura - pořadové číslo (2 byte max), typ dat (*4* byte), packet (512 byte max) 
 1. Pořadové číslo: číslovat od 1 do *64*, u příchozí strany řadit od 1 do *64* a opakovat (*64 asi? určit podle odezvy*)
