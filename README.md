@@ -13,9 +13,10 @@ Struktura - 1B 1B xB
 ## Struktura komunikačního packetu mezi klientem a serverem
 ---
 
-Registrace (c -> s) - 1B 392B
+Registrace (c -> s) - 1B 392B 32B
 1. Typ packetu (hex 11)
 2. Veřejný klíč (ascii)
+3. Hostname (ascii)
 
 Acknowledged, Not acknowledged (% -> %) - 1B
 1. Typ packetu (hex 00 - ack, hex 01 - nack)
