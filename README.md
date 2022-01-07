@@ -11,7 +11,8 @@ Velikost packetu= *512B*
            00 - data osobní     
            01 - řídící informace     
            02 - handshake/responde      
-           03 - keep alive    
+           03 - keep alive     
+           04 - acknowledgement
            
 3. Data: (*510byte=1data)    
            samotné data pro přenos mezi klienty     
