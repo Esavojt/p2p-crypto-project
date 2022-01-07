@@ -2,10 +2,19 @@
 ---
 1024B - Délka max
 
-Struktura - pořadové číslo (2 byte max), typ dat (*4* byte), packet (512 byte max) 
-1. Pořadové číslo: číslovat od 1 do *64*, u příchozí strany řadit od 1 do *64* a opakovat (*64 asi? určit podle odezvy*)
-2. Typ dat: označení (*pro 3 písmena rezervovat 4B*) ODT- data osobní, CDT- řídící info, RDT- handshake/responde
-3. Packet: samotné data pro přenos mezi klienty
+  -Struktura-
+Velikost packetu= *512B* 
+1. Pořadové číslo: číslování (*1byte=1pořadí*)
+           číslovat od 00 do *99*, u příchozí strany řadit od 00 do *99* a opakovat (*99 asi? určit podle odezvy*)
+           
+2. Typ dat: označení (*1byte=1typ*) 
+           00 - data osobní
+           01 - řídící informace
+           02 - handshake/responde
+           03 - keep alive
+           
+3. Data: (*510byte=1data)
+           samotné data pro přenos mezi klienty
 
 
 ---
