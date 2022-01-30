@@ -1,22 +1,18 @@
-import random
-import select
 import socket
-import string
-import time
-
-from Crypto.Cipher import AES
 
 from keypair import KeyPair
 
-
 class Client():
-
     def __init__(self, custom_key_pair: KeyPair | None, server_address_ip: str, server_port: int) -> None:
         # Set the server address as a tuple
         self.server_address = (server_address_ip, server_port)
 
         # Check if custom key pair is being used
         if custom_key_pair:
+            # Assert that custom_key_pair is instance of KeyPair
+            assert(isinstance(custom_key_pair, KeyPair))
+
+            # Use custom keypair
             self.client_key_pair = custom_key_pair
         else:
             self.client_key_pair = KeyPair()
@@ -29,24 +25,94 @@ class Client():
         if len(client_name) > 32:
             raise ValueError("Client name can be max length of 32 characters")
 
-        # Connect to the control server
+        # Connect to the control servery
         self.server_socket.connect(self.server_address)
 
         # Register with the client name
         # See README.md for more information
         payload = 0x11.to_bytes(1, byteorder="little") + \
-            self.client_key_pair.public_key_string.encode(
-                "ascii") + client_name.encode("ascii")
+            self.client_key_pair.public_key_string.encode("ascii") + \
+            client_name.encode("ascii")
+        
+        # Send data to server
         self.server_socket.send(payload)
 
+        # Receive Acknowledgement from the server
         data = self.server_socket.recv(1)
-        return len(data) and data[0] == 0
+
+        return len(data) and data[0] == 0x00
     
-    def connect(self, remote_public_key: str) -> Connection | None:
-        pass # TODO: Implement
+    def connect(self, remote_public_key: str): #-> Connection | None:
+        # Make the connection payload
+        payload = 0x12.to_bytes(1, byteorder="little") + \
+            self.client_key_pair.public_key_string.encode("ascii") + \
+            remote_public_key.encode("ascii")
+
+        # Send the payload to the server
+        self.server_socket.send(payload)
+
+        # Receive Acknowledgement or Connection setup from server        
+        data = self.server_socket.recv(9)
+
+        # If server sent nack
+        if data[0] == 0x01:
+            # Return None to indicate that connection cannot be estabilished
+            return None
+        
+        # Server sent Connection setup
+
+        # Receive and make remote ip in format "192.168.1.1"
+        remote_ip = str(int.from_bytes(data[1:2], byteorder="little")) + "." + \
+            str(int.from_bytes(data[2:3], byteorder="little")) + "." + \
+            str(int.from_bytes(data[3:4], byteorder="little")) + "." + \
+            str(int.from_bytes(data[4:5], byteorder="little"))
+        
+        print(remote_ip)
+        # TODO: Implement
+    
+    def listen_for_connection(self, whitelist = None, blacklist = None):
+        while True:
+            data = self.server_socket.recv(393)
+
+            if data[0] != 0x13:
+                self.server_socket.close()
+                raise ConnectionError("Received something else then connection estabilishment message!")
+            
+            remoteAddress = data[1:].decode("ascii")
+
+            print(f"Received connection from {remoteAddress}")
+
+            if whitelist:
+                if remoteAddress not in whitelist:
+                    self.server_socket.send(0x01.to_bytes(1, byteorder="little"))
+                    print("Address isn't in whitelist, refusing.")
+                    continue
+            
+            if blacklist:
+                if remoteAddress in blacklist:
+                    self.server_socket.send(0x01.to_bytes(1, byteorder="little"))
+                    print("Address is in blacklist, refusing.")
+                    continue
+            
+            print("Accepting!")
+            self.server_socket.send(0x00.to_bytes(1, byteorder="little"))
+
+            # TODO: Return connection
+            data = self.server_socket.recv(9)
+
+            remote_ip = str(int.from_bytes(data[1:2], byteorder="little")) + "." + \
+            str(int.from_bytes(data[2:3], byteorder="little")) + "." + \
+            str(int.from_bytes(data[3:4], byteorder="little")) + "." + \
+            str(int.from_bytes(data[4:5], byteorder="little"))
+            local_port = 12
+            remote_port = 12
+            print(remote_ip)
+            return
 
 
+
+# This is for testing
 if __name__ == "__main__":
     client = Client(None, "localhost", 8090)
     test = client.register("Minecraft server")
-    print(test)
+    client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlryQ9BlDIUIApbL931aXK6uAdvWNYHg8isot0aQSxly1EH98jYI7TD9JIEu0LHZQs0Vcjjziu3MjgvL+d9yniyH7y63woyiE1F88dDs8PBSYL34ot3brIkLXkHLrihwqTl5nTo+46JXhfDrKZX/r8foPL3ZE9apYLTNa+5W0H3dACQkTv9W+ZjRAa/JNM701vfolWWYyUS7dngwC2BmLe9mFo491K+yWkWwefq79OGSjGyNd+duWL05hZbLmA/vnVN7s2hSQYpDjo5VECgVOM08zdoZ9ZYH5xj0cL6Al5bGpVK47ggtQ8dRz7b+/q/zMkzCGU8PpI9CP6R3FD+KoSwIDAQAB")

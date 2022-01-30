@@ -20,7 +20,8 @@ httpServer.listen(httpServerPort);
 
 // Create tcp server object that handles all the client registration and connections
 var tcpServer = net.createServer(function(socket) {
-	socket.on("data", function(data) {
+
+	let handler = function(data) {
 		var ipAddress = socket.remoteAddress;
 
 		if (ipAddress.startsWith("::ffff:")) {
@@ -40,9 +41,49 @@ var tcpServer = net.createServer(function(socket) {
 
 			case 0x12:
 				// TODO: Implement
-				var localPublicKey = data.subarray(1, 393).toString("ascii");
-				var remotePublicKey = data.subarray(1, 393).toString("ascii");
+				const localPublicKey = data.subarray(1, 393).toString("ascii");
+				const remotePublicKey = data.subarray(393, 786).toString("ascii");
+				console.log(localPublicKey);
+				console.log(remotePublicKey);
+
+				let remoteClient = connectedClients[remotePublicKey]
+
+				if (remoteClient == null) {
+					console.warn(`${remotePublicKey} couldn't be found`);
+					socket.write(Buffer.from([0x01]));
+					break;
+				}
+
+				remoteClient.socketObject.write(Buffer.from([0x13])+Buffer.from(remotePublicKey));
+
+				remoteClient.socketObject.on("data", function(remoteData){
+					if(remoteData[0] != 0x00){
+						socket.write(Buffer.from([0x01]));
+						remoteClient.socketObject.on("data", handler);
+						return;
+					}
+					const ipAddressRegex = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/;
+					let matchLocal = ipAddressRegex.exec(ipAddress); // TODO: IP address
+					let matchRemote = ipAddressRegex.exec(remoteClient.address); // TODO: Implement
+	
+					if (matchLocal == null || matchRemote == null) {
+						console.warn(`No ip present for: ${remotePublicKey}:${ipAddress} or ${localPublicKey}:${"remote ip"}`);
+						socket.write(Buffer.from([0x01]));
+					}else{
+						socket.write(Buffer.from([0x14, parseInt(matchLocal[1]), 
+														parseInt(matchLocal[2]), 
+														parseInt(matchLocal[3]), 
+														parseInt(matchLocal[4])]));
+						// TODO: remote socket write ip address 
+						remoteClient.socketObject.write(Buffer.from([0x14,  parseInt(matchRemote[1]), 
+																			parseInt(matchRemote[2]), 
+																			parseInt(matchRemote[3]), 
+																			parseInt(matchRemote[4])]));
+					}
+					remoteClient.socketObject.on("data", handler);
+				});				
 				break;
+
 		}
 		return;
 
@@ -82,7 +123,7 @@ var tcpServer = net.createServer(function(socket) {
 		}else{
 			console.log("Someone sent wrong data! %s: %s", socket.remoteAddress, data);
 		}
-	});
+	};
 
 	socket.on("error", function(err) {
 		console.log("An error has occured '%s'", err.message);
@@ -100,6 +141,7 @@ var tcpServer = net.createServer(function(socket) {
 			}
 		});
 	});
+	socket.on("data", handler);
 
 	socket.on("end", function(){
 		var keys = Object.keys(connectedClients);
