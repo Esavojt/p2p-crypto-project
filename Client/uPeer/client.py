@@ -40,7 +40,7 @@ class Client():
         # Receive Acknowledgement from the server
         data = self.server_socket.recv(1)
 
-        return len(data) and data[0] == 0x00
+        return len(data) > 0 and data[0] == 0x0
     
     def connect(self, remote_public_key: str): #-> Connection | None:
         # Make the connection payload
@@ -56,7 +56,7 @@ class Client():
 
         # If server sent nack
         if data[0] == 0x01:
-            # Return None to indicate that connection cannot be estabilished
+            # Return None to indicate that connection cannot be established
             return None
         
         # Server sent Connection setup
@@ -78,18 +78,16 @@ class Client():
                 self.server_socket.close()
                 raise ConnectionError("Received something else then connection establishment message!")
             
-            remoteAddress = data[1:].decode("ascii")
+            remote_address = data[1:].decode("ascii")
 
-            print(f"Received connection from {remoteAddress}")
+            print(f"Received connection from {remote_address}")
 
-            if whitelist:
-                if remoteAddress not in whitelist:
+            if whitelist and remote_address not in whitelist:
                     self.server_socket.send(0x01.to_bytes(1, byteorder="little"))
                     print("Address isn't in whitelist, refusing.")
                     continue
             
-            if blacklist:
-                if remoteAddress in blacklist:
+            if blacklist and remote_address in blacklist:
                     self.server_socket.send(0x01.to_bytes(1, byteorder="little"))
                     print("Address is in blacklist, refusing.")
                     continue
