@@ -76,7 +76,7 @@ class Client():
 
             if data[0] != 0x13:
                 self.server_socket.close()
-                raise ConnectionError("Received something else then connection estabilishment message!")
+                raise ConnectionError("Received something else then connection establishment message!")
             
             remoteAddress = data[1:].decode("ascii")
 
@@ -104,15 +104,19 @@ class Client():
             str(int.from_bytes(data[2:3], byteorder="little")) + "." + \
             str(int.from_bytes(data[3:4], byteorder="little")) + "." + \
             str(int.from_bytes(data[4:5], byteorder="little"))
+            
+            # TEST
             local_port = 12
             remote_port = 12
+            # TEST
             print(remote_ip)
             return
 
 
 
-# This is for testing
+# TEST: This is for testing
 if __name__ == "__main__":
     client = Client(None, "localhost", 8090)
     test = client.register("Minecraft server")
     client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlryQ9BlDIUIApbL931aXK6uAdvWNYHg8isot0aQSxly1EH98jYI7TD9JIEu0LHZQs0Vcjjziu3MjgvL+d9yniyH7y63woyiE1F88dDs8PBSYL34ot3brIkLXkHLrihwqTl5nTo+46JXhfDrKZX/r8foPL3ZE9apYLTNa+5W0H3dACQkTv9W+ZjRAa/JNM701vfolWWYyUS7dngwC2BmLe9mFo491K+yWkWwefq79OGSjGyNd+duWL05hZbLmA/vnVN7s2hSQYpDjo5VECgVOM08zdoZ9ZYH5xj0cL6Al5bGpVK47ggtQ8dRz7b+/q/zMkzCGU8PpI9CP6R3FD+KoSwIDAQAB")
+# TEST
