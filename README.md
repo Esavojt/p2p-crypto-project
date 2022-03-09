@@ -1,20 +1,20 @@
 ## Struktura packetu
 ---
-1024B - Délka max
+1500B - Délka max
 
   -Struktura-     
-Velikost packetu= *512B*     
-1. Pořadové číslo: číslování (*1byte=1pořadí*)    
-           číslovat od 00 do *99*, u příchozí strany řadit od 00 do *99* a opakovat (*99 asi? určit podle odezvy*)     
+Velikost packetu= *1024B*
+2B pořadové číslo      
+    od 0000 do FFFF
            
 2. Typ dat: označení (*1byte=1typ*)   
            00 - data osobní     
            01 - řídící informace     
-           02 - handshake/responde      
+           02 - handshake/response      
            03 - keep alive     
            04 - acknowledgement
            
-3. Data: (*510byte=1data)    
+3. Data: (*1024byte=1data)    
            samotné data pro přenos mezi klienty     
 
 
