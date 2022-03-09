@@ -115,45 +115,7 @@ var tcpServer = net.createServer(function(socket) {
 				break;
 
 		}
-		return;
-
-		if(data[0] == 0x11){
-			// REGISTER,srcPubKey
-			let client = data.split(",");
-
-			console.log("Client registered from %s", ipAddress);
-			connectedClients[client[1]] = {address: ipAddress, socketObject: socket, publicKey: client[1]};
-
-			socket.write("OK\n");
-		}else if(data.startsWith("CONNECT")){
-			// CONNECT,srcPubKey,receiverPubKey
-			let parsedData = data.split(",");
-
-			var srcPort = generatePort()
-			var dstPort = generatePort()
-
-			if(!connectedClients[parsedData[2]]){
-				socket.write("NO\n")
-			}else{
-				var receiver = connectedClients[parsedData[2]];
-
-				var srcSocket = socket;
-				var receiverSocket = receiver.socketObject;
-
-				var srcIP = ipAddress;
-				var receiverIP = receiver.address;
-
-				console.log("Connection between: %s:%s -> %s:%s", srcIP, srcPort, receiverIP, dstPort)
-				srcSocket.write("OK," + receiverIP + "," + dstPort + "," + srcPort);
-
-				receiverSocket.write("OK," + srcIP + "," + srcPort + "," + dstPort);
-
-			}
-			
-		}else{
-			console.log("Someone sent wrong data! %s: %s", socket.remoteAddress, data);
-		}
-	};
+	}
 
 	socket.on("error", function(err) {
 		console.log("An error has occured '%s'", err.message);

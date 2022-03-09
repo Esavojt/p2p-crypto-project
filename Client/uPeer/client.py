@@ -116,7 +116,7 @@ class Client():
             print(f"rp {remote_port}")
             print(f"lp {local_port}")
             # -- TEST --
-            
+
             # TODO: Return connection
             return
 
@@ -127,6 +127,6 @@ if __name__ == "__main__":
     test = client.register("Minecraft server")
     print(client.client_key_pair.public_key_string)
     #client.listen_for_connection()
-    client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtZL5JoLRpERzLpukeaAU6wWKWclXCQmsxd04AtkcGdoMbHLfp2Ke3ysk0oTVq74W+boF0sXJ4SnAwRUOPP4VXsx3666FQHfDfDrxRxMt2pB7I818RIRATmVf53iNaVbs62qrpV8jEN2Y5eya1iEqRlaclbANw/pFArJ6naR0bxfR0nYAeXbw184Y+xcpVz/6brvjOF1RXA9lkZz/fWFku65RSTzqtJZoKXPYh+hOuuvkSYKC36+GVYxp48dnKduoKqcpLS5WRbt1B/MSIHXXEn6fLVdsiw4z2lA26CJLygCjjvIgbzee3OHYhQ8bYc2tStzhnrFwr5T/Wu8dnkrgDQIDAQAB");
+    client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtZL5JoLRpERzLpukeaAU6wWKWclXCQmsxd04AtkcGdoMbHLfp2Ke3ysk0oTVq74W+boF0sXJ4SnAwRUOPP4VXsx3666FQHfDfDrxRxMt2pB7I818RIRATmVf53iNaVbs62qrpV8jEN2Y5eya1iEqRlaclbANw/pFArJ6naR0bxfR0nYAeXbw184Y+xcpVz/6brvjOF1RXA9lkZz/fWFku65RSTzqtJZoKXPYh+hOuuvkSYKC36+GVYxp48dnKduoKqcpLS5WRbt1B/MSIHXXEn6fLVdsiw4z2lA26CJLygCjjvIgbzee3OHYhQ8bYc2tStzhnrFwr5T/Wu8dnkrgDQIDAQAB")
     #client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4niqYneX9ClHhJ6zwFsOYXu8xEbjyxyYVMwlAPCsiSDY17huoOejKj9DtktceCOfW6XavOr/7Xd7rgTPrs0UETxA9N7rda9gplh1MXwaQPFchQY2Wo4e/bmE1lk8xvpEywJKMfuAVQ879Yf7YzDkBXpxI/LGk+kcm6eSrnKeMyoI+dfh4Rt887BPZbkfVotooH7wqXZzSnAQVA4q840FjZxG+f5Z4v3AAe4vGfih/p3yW3dqk5fEGFAOfui74ypXfSbrErFENUOUTPkueWn/Hbt90xnaZDFqFANK2vZNmIKultvHyhfow3zACcSzNPMd5+P0Ikp//jH8y47bFBSdEQIDAQAB")
 # -- TEST --
