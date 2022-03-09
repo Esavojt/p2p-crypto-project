@@ -54,31 +54,61 @@ var tcpServer = net.createServer(function(socket) {
 					break;
 				}
 
-				remoteClient.socketObject.write(Buffer.from([0x13])+Buffer.from(remotePublicKey));
+				// Send a connection request to the remote client
+				remoteClient.socketObject.write(Buffer.from([0x13]) + Buffer.from(remotePublicKey));
 
 				remoteClient.socketObject.on("data", function(remoteData){
+					// If request is denied
 					if(remoteData[0] != 0x00){
+						// Send deny response to the client
 						socket.write(Buffer.from([0x01]));
+
+						// Return previous handler
 						remoteClient.socketObject.on("data", handler);
 						return;
 					}
+
+					// Request got acknowledged
+
 					const ipAddressRegex = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/;
-					let matchLocal = ipAddressRegex.exec(ipAddress); // TODO: IP address
-					let matchRemote = ipAddressRegex.exec(remoteClient.address); // TODO: Implement
+					let matchLocal = ipAddressRegex.exec(ipAddress); // Get each octet of ip address
+					let matchRemote = ipAddressRegex.exec(remoteClient.address); // Get each octet of ip address
 	
+					// If something doesn't match regex
 					if (matchLocal == null || matchRemote == null) {
 						console.warn(`No ip present for: ${remotePublicKey}:${ipAddress} or ${localPublicKey}:${"remote ip"}`);
+						// Reply with nack
 						socket.write(Buffer.from([0x01]));
 					}else{
-						socket.write(Buffer.from([0x14, parseInt(matchLocal[1]), 
-														parseInt(matchLocal[2]), 
-														parseInt(matchLocal[3]), 
-														parseInt(matchLocal[4])]));
-						// TODO: remote socket write ip address 
-						remoteClient.socketObject.write(Buffer.from([0x14,  parseInt(matchRemote[1]), 
-																			parseInt(matchRemote[2]), 
-																			parseInt(matchRemote[3]), 
-																			parseInt(matchRemote[4])]));
+						// Generate port pair
+						let localPort = generatePort();
+						let remotePort = generatePort();
+
+						// Add ports as 16bit integers
+						let localPortBuffer = Buffer.alloc(4);
+						localPortBuffer.writeInt16LE(remotePort, 0);
+						localPortBuffer.writeInt16LE(localPort, 2);
+
+						let remotePortBuffer = Buffer.alloc(4);
+						remotePortBuffer.writeInt16LE(localPort, 0);
+						remotePortBuffer.writeInt16LE(remotePort, 2);
+
+
+						// Send a connection build
+						var ipBuffer = Buffer.from([0x14,   parseInt(matchLocal[1]), 
+															parseInt(matchLocal[2]), 
+															parseInt(matchLocal[3]), 
+															parseInt(matchLocal[4])]);
+						socket.write(Buffer.concat([ipBuffer, localPortBuffer]));
+
+						// Send a connection build to the remote client
+						ipBuffer = Buffer.from([0x14,   parseInt(matchRemote[1]), 
+														parseInt(matchRemote[2]), 
+														parseInt(matchRemote[3]), 
+														parseInt(matchRemote[4])]);
+						
+						remoteClient.socketObject.write(Buffer.concat([ipBuffer, remotePortBuffer]));
+						console.log(localPort, remotePort);
 					}
 					remoteClient.socketObject.on("data", handler);
 				});				

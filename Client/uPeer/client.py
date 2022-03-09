@@ -1,6 +1,7 @@
 import socket
 
 from keypair import KeyPair
+import tools
 
 
 class Client():
@@ -66,17 +67,19 @@ class Client():
 
         # Server sent Connection setup
 
-        # Receive and make remote ip in format "192.168.1.1"
-        remote_ip = str(int.from_bytes(data[1:2], byteorder="little")) + "." + \
-            str(int.from_bytes(data[2:3], byteorder="little")) + "." + \
-            str(int.from_bytes(data[3:4], byteorder="little")) + "." + \
-            str(int.from_bytes(data[4:5], byteorder="little"))
+        remote_ip, remote_port, local_port = tools.extract_port_and_ip_from_data(data)
 
+        # -- TEST --
         print(remote_ip)
+        print(f"rp {remote_port}")
+        print(f"lp {local_port}")
+        # -- TEST --
+
         # TODO: Implement
 
     def listen_for_connection(self, whitelist=None, blacklist=None):
         while True:
+            # TODO: Change all recv to r, _, _ = select.select([socket], [], [])
             data = self.server_socket.recv(393)
 
             if data[0] != 0x13:
@@ -104,20 +107,17 @@ class Client():
             print("Accepting!")
             self.server_socket.send(0x00.to_bytes(1, byteorder="little"))
 
-            # TODO: Return connection
             data = self.server_socket.recv(9)
 
-            # Convert the supplied IPv4 address from raw bytes to str
-            remote_ip = str(int.from_bytes(data[1:2], byteorder="little")) + "." + \
-                str(int.from_bytes(data[2:3], byteorder="little")) + "." + \
-                str(int.from_bytes(data[3:4], byteorder="little")) + "." + \
-                str(int.from_bytes(data[4:5], byteorder="little"))
+            remote_ip, remote_port, local_port = tools.extract_port_and_ip_from_data(data)
 
             # -- TEST --
-            local_port = 12
-            remote_port = 12
-            # -- TEST --
             print(remote_ip)
+            print(f"rp {remote_port}")
+            print(f"lp {local_port}")
+            # -- TEST --
+            
+            # TODO: Return connection
             return
 
 
@@ -125,8 +125,8 @@ class Client():
 if __name__ == "__main__":
     client = Client(None, "localhost", 8090)
     test = client.register("Minecraft server")
-    client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlryQ9BlDIUIApbL931aXK6uAdvWNYHg8isot0aQSxly1EH98jYI7TD9J\
-    IEu0LHZQs0Vcjjziu3MjgvL+d9yniyH7y63woyiE1F88dDs8PBSYL34ot3brIkLXkHLrihwqTl5nTo+46JXhfDrKZX/r8foPL3ZE9apYLTNa+5W0H3dA\
-    CQkTv9W+ZjRAa/JNM701vfolWWYyUS7dngwC2BmLe9mFo491K+yWkWwefq79OGSjGyNd+duWL05hZbLmA/vnVN7s2hSQYpDjo5VECgVOM08zdoZ9ZYH5\
-    xj0cL6Al5bGpVK47ggtQ8dRz7b+/q/zMkzCGU8PpI9CP6R3FD+KoSwIDAQAB")
+    print(client.client_key_pair.public_key_string)
+    #client.listen_for_connection()
+    client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtZL5JoLRpERzLpukeaAU6wWKWclXCQmsxd04AtkcGdoMbHLfp2Ke3ysk0oTVq74W+boF0sXJ4SnAwRUOPP4VXsx3666FQHfDfDrxRxMt2pB7I818RIRATmVf53iNaVbs62qrpV8jEN2Y5eya1iEqRlaclbANw/pFArJ6naR0bxfR0nYAeXbw184Y+xcpVz/6brvjOF1RXA9lkZz/fWFku65RSTzqtJZoKXPYh+hOuuvkSYKC36+GVYxp48dnKduoKqcpLS5WRbt1B/MSIHXXEn6fLVdsiw4z2lA26CJLygCjjvIgbzee3OHYhQ8bYc2tStzhnrFwr5T/Wu8dnkrgDQIDAQAB");
+    #client.connect("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4niqYneX9ClHhJ6zwFsOYXu8xEbjyxyYVMwlAPCsiSDY17huoOejKj9DtktceCOfW6XavOr/7Xd7rgTPrs0UETxA9N7rda9gplh1MXwaQPFchQY2Wo4e/bmE1lk8xvpEywJKMfuAVQ879Yf7YzDkBXpxI/LGk+kcm6eSrnKeMyoI+dfh4Rt887BPZbkfVotooH7wqXZzSnAQVA4q840FjZxG+f5Z4v3AAe4vGfih/p3yW3dqk5fEGFAOfui74ypXfSbrErFENUOUTPkueWn/Hbt90xnaZDFqFANK2vZNmIKultvHyhfow3zACcSzNPMd5+P0Ikp//jH8y47bFBSdEQIDAQAB")
 # -- TEST --
