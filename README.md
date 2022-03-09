@@ -4,20 +4,21 @@
 
 ---
 1500B - Délka max
+ 
+Velikost packetu= *1024B*  
 
-  -Struktura-     
-Velikost packetu= *1024B*
-2B pořadové číslo      
+
+1. pořadové číslo *(2Byte)*      
     od 0000 do FFFF
            
-2. Typ dat: označení (*1byte=1typ*)   
+2. Typ dat: označení *(1Byte)*   
            00 - data osobní     
            01 - řídící informace     
            02 - handshake/response      
            03 - keep alive     
            04 - acknowledgement
            
-3. Data: (*1024byte=1data)    
+3. Data: *(1024byte)*    
            samotné data pro přenos mezi klienty     
 
 ---
